@@ -13,7 +13,6 @@ const { validateReviewForm } = require("../../utils/validation");
 
 const loadHome = async (req , res) => {
     try {
-
         const { isLoggedIn, userData, isUserBlocked } = res.locals;
     
         let products  = await Product.find({
@@ -82,7 +81,7 @@ const loadHome = async (req , res) => {
         }); 
     } catch (error) {
         console.log("Home page not loading:", error);
-        res.status(500).send("Server Error");
+        res.status(500).render("errorPage");
     }
 };
 
