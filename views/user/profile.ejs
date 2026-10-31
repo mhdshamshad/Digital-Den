@@ -46,7 +46,7 @@
                                             <h5 class="mb-3">Invite friends and earn rewards!</h5>
                                             <p class="mb-3">Share your unique referral link with friends. When they sign up using your link, you'll get <strong>₹200</strong> in rewards.</p>
                                             <div class="input-group mb-3">
-                                                <input type="text" class="form-control" id="referralLink" value="<%= user.referralCode  || '1234'%>" readonly>
+                                                <input type="text" class="form-control" id="referralLink" value="<%= user.referralCode %>" data-base-url="<%= siteBaseUrl %>" readonly>
                                                 <button class="btn btn-primary" type="button" id="copyReferralLink">
                                                     <i class="bi bi-clipboard me-1"></i> Copy
                                                 </button>

@@ -63,6 +63,7 @@ CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
 ```
 
 Use the callback URL configured in your Google OAuth provider. Use Razorpay test credentials while developing. Email, Google OAuth, and Razorpay features need valid provider configuration.
+Set `HOST` to the visitor-facing hostname used for referral links (not a private bind address). Referral rewards are written in a MongoDB transaction, so the database must support transactions; MongoDB Atlas does, while local MongoDB requires a replica set.
 
 Product images are uploaded to Cloudinary under `digital-den/products`; profile images are uploaded under `digital-den/profileImages`. Keep the Cloudinary URL private and use the URL from your Cloudinary console. MongoDB stores each image's secure URL and Cloudinary public ID. The app renders these URLs directly; local `/uploads` image paths are not used as a fallback.
 

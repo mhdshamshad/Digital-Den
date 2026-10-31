@@ -6,6 +6,7 @@ const Wallet = require("../../model/walletSchema");
 const {sendProfileUpdateOtp} = require("../../utils/userEmails");
 const Product = require('../../model/productSchema');
 const { deleteCloudinaryImage } = require('../../config/cloudinary');
+const { getSiteBaseUrl } = require('../../utils/siteUrl');
 
 
 const getUserProfile = async (req, res) => {
@@ -21,7 +22,7 @@ const getUserProfile = async (req, res) => {
 
         const totalReferrals = user?.redeemedUsers?.length || 0 ;
 
-        res.render('profile', { user , totalReferrals });
+        res.render('profile', { user, totalReferrals, siteBaseUrl: getSiteBaseUrl() });
     } catch (error) {
         console.error('Error fetching profile:', error);
         res.status(500).render('error', { message: 'Server error' });

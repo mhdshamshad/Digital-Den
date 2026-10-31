@@ -1,7 +1,7 @@
 const User = require("../../model/userSchema");
 const bcrypt = require("bcrypt");
 const { validateUser, generateOtp }  = require("../../utils/helper.js");
-const Wallet = require("../../model/walletSchema.js");
+const { createUserWithReferral } = require("../../utils/referralRewards");
 const {sendForgotOtp, sendSignupOtp} = require("../../utils/userEmails.js")
 
 const loadLogin = async (req , res) =>{
@@ -81,7 +81,7 @@ const loadSignup = async (req,res) =>{
 const signup = async(req,res,next) =>{
     try {
         
-        const {username,email,password ,referralCode  } = req.body;
+        const {username,email,password,referralCode} = req.body;
         const findUser = await User.findOne({email, isAdmin:false});
 
         if(findUser){
@@ -97,6 +97,22 @@ const signup = async(req,res,next) =>{
                 success: false,
                 message:validationError
             }); 
+        }
+
+        const normalizedReferralCode = typeof referralCode === "string"
+            ? referralCode.trim().toUpperCase()
+            : "";
+        if (normalizedReferralCode) {
+            const referrer = await User.findOne({
+                referralCode: normalizedReferralCode,
+                isAdmin: false
+            });
+            if (!referrer) {
+                return res.status(400).json({ success: false, message: "Referral code is invalid" });
+            }
+            if (referrer.email.toLowerCase() === email.trim().toLowerCase()) {
+                return res.status(400).json({ success: false, message: "You cannot use your own referral code" });
+            }
         }
          //  otp 
         const otp = generateOtp();
@@ -116,7 +132,7 @@ const signup = async(req,res,next) =>{
         req.session.otpExpires = Date.now() + 60 *1000 ;
         req.session.userData = {
             username,email,password,
-            referralCode : referralCode || null
+            referralCode: normalizedReferralCode || null
         };
 
         
@@ -162,93 +178,23 @@ const verifyOTP = async(req, res , next)=>{
             return res.status(400).json({success:false,message:"Invalid OTP, Please try again"})
         }
 
-        let user = req.session.userData;
-
-        const harshPassword = await bcrypt.hash(user.password,10);
+        const signupData = req.session.userData;
+        const harshPassword = await bcrypt.hash(signupData.password,10);
         if (!harshPassword) {
             return res.status(500).json({ success: false, message: "An error occurred while processing password!" });
         }
-        const newUser = new User({
-            username:user.username,
-            email:user.email,
-            password:harshPassword
-        });
-
-        let referrer = null;
-
-        if (user.referralCode) {
-            referrer = await User.findOne({ referralCode: user.referralCode });
-            if (referrer) {
-                referrer.referredBy = referrer._id;
-            }
-        }
-
-        await newUser.save();
-
-        const updateTasks = [];
-
-        if(referrer){
-            const referrerWallet = Wallet.findOneAndUpdate(
-                {userId : referrer._id},
-                {
-                    $inc: {balance : 200},
-                    $push:{
-                        transactions:{
-                            amount: 200,
-                            type:"Credit",
-                            method: "Referral",
-                            status: "Completed",
-                            description: `Referral reward for ${newUser.username}`,
-                        },
-                    },
-                    $setOnInsert :{
-                        userId : referrer._id,
-                    },
-                },
-                {
-                    upsert: true,
-                    new: true,
-                }
-            );
-
-            const newUserWallet = Wallet.findOneAndUpdate(
-                { userId: newUser._id },
-                {
-                    $inc: { balance: 100 },
-                    $push: {
-                        transactions: {
-                            amount: 100,
-                            type: "Credit",
-                            method: "Referral",
-                            status: "Completed",
-                            description: "Welcome reward for using referral code",
-                            createdAt: new Date()
-                        }
-                    },
-                    $setOnInsert: {
-                        userId: newUser._id
-                    }
-                },
-                { upsert: true, new: true }
-            );
-
-            const referrerRedeemed = User.findByIdAndUpdate(
-                referrer._id,
-                { $push: { redeemedUsers: newUser._id } }
-            );
-
-            updateTasks.push(referrerWallet, newUserWallet, referrerRedeemed);
-        }
-
-        if (updateTasks.length > 0) {
-            await Promise.all(updateTasks);
-        }
+        const newUser = await createUserWithReferral({
+            username: signupData.username,
+            email: signupData.email,
+            password: harshPassword
+        }, signupData.referralCode);
  
         req.session.user = newUser._id;
         res.setHeader('Cache-Control', 'no-store',);
 
         delete req.session.userOtp;
         delete req.session.userData;
+        delete req.session.referralCode;
 
         console.log("User created Successfully!!")
         return  res.json({

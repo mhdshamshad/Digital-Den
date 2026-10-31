@@ -1,21 +1,28 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const User = require("../model/userSchema.js");
+const { createUserWithReferral } = require("../utils/referralRewards");
 const env = require("dotenv").config();
 
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL 
-}, async (accessToken, refreshToken, profile, done) => {
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    passReqToCallback: true
+}, async (req, accessToken, refreshToken, profile, done) => {
     try {
+        const email = profile.emails?.[0]?.value?.trim().toLowerCase();
+        if (!email) {
+            return done(new Error("Google account did not provide an email address"));
+        }
+
         // find user by googleId
         let user = await User.findOne({ googleId: profile.id });
 
         if (!user) {
             // If no user found with googleId, check email
-            user = await User.findOne({ email: profile.emails[0].value });
+            user = await User.findOne({ email });
             
             if (user) {
                 // If user exists with email but no googleId, update their googleId
@@ -25,13 +32,12 @@ passport.use(new GoogleStrategy({
             }
             
             // create new one if no user exists
-            user = new User({
+            user = await createUserWithReferral({
                 username: profile.displayName,
-                email: profile.emails[0].value,
+                email,
                 googleId: profile.id,
                 isVerified: true
-            });
-            await user.save();
+            }, req.session.referralCode);
         }
         
         return done(null, user);
@@ -61,4 +67,3 @@ passport.deserializeUser(async (id, done) => {
 });
 
 module.exports = passport;
-

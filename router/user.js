@@ -12,6 +12,7 @@ const { checkBlockedStatus ,checkSignupSession,
       checkUserLoggedIn} = require('../middleware/userAuthMiddleware.js');
 const passport = require("passport");
 const userUpload = require("../middleware/userUpload.js");
+const User = require("../model/userSchema.js");
 
 
 // user router 
@@ -36,9 +37,32 @@ router.get("/contactUs",profileController.getContactUsPage);
 router.get("/aboutUs",profileController.getAboutUsPage);
      
 // Google OAuth routes
-router.get("/auth/google", passport.authenticate("google", {
-    scope: ["profile", "email"]
-}));
+router.get("/auth/google", async (req, res, next) => {
+    try {
+        const referralCode = typeof req.query.ref === "string"
+            ? req.query.ref.trim().toUpperCase()
+            : "";
+
+        delete req.session.referralCode;
+        if (referralCode) {
+            const referrer = await User.findOne({ referralCode, isAdmin: false });
+            if (!referrer) {
+                return res.redirect("/signup?referralError=invalid");
+            }
+
+            req.session.referralCode = referralCode;
+            await new Promise((resolve, reject) => {
+                req.session.save(error => error ? reject(error) : resolve());
+            });
+        }
+
+        return passport.authenticate("google", {
+            scope: ["profile", "email"]
+        })(req, res, next);
+    } catch (error) {
+        next(error);
+    }
+});
    
 router.get("/auth/google/callback", 
     passport.authenticate("google", {
@@ -47,6 +71,7 @@ router.get("/auth/google/callback",
     }),
     (req, res) => {
        req.session.user = req.user._id;
+       delete req.session.referralCode;
         res.redirect("/");
     }
 );
