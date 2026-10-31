@@ -91,13 +91,6 @@ npm start
 
 The start script runs `nodemon server.js`. Open the local address using the port configured in `.env`, for example `http://localhost:3000`.
 
-## Project Documentation
-
-- [API route and Postman handoff](./digital-den-api-documentation.txt) — registered routes, request details, responses, and Postman setup notes.
-- [Step-by-step Postman handoff files](./postman-steps/) — staged instructions for building a Postman collection in smaller parts. These are instructions, not an exported Postman collection JSON.
-- [Database design (JSON)](./database-design.json) — structured database schema reference for all 14 Mongoose models.
-- [Database design (TXT)](./database-design.txt) — readable database schema reference.
-
 ## Notes
 
 - Postman should keep its cookie jar enabled for session-based sign-in and protected routes. The application uses Express sessions rather than JWT bearer tokens.
