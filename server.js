@@ -12,6 +12,8 @@ const path = require("path");
 const app = express();
 const sessionMaxAgeHours = Number(process.env.SESSION_MAX_AGE_HOURS || 72);
 
+app.set("trust proxy", 1);
+
 if (!Number.isFinite(sessionMaxAgeHours) || sessionMaxAgeHours <= 0) {
   throw new Error("SESSION_MAX_AGE_HOURS must be a positive number");
 }
