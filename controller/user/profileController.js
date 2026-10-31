@@ -1,7 +1,7 @@
 const User = require('../../model/userSchema');
 const bcrypt = require('bcrypt');
 const {validatePassword, validateEmail ,validateUserProfile} = require("../../utils/validation");
-const {genarateOtp} = require("../../utils/helper");
+const {generateOtp} = require("../../utils/helper");
 const Wallet = require("../../model/walletSchema");
 const {sendProfileUpdateOtp} = require("../../utils/userEmails");
 const Product = require('../../model/productSchema');
@@ -128,7 +128,7 @@ const changeEmail = async (req , res , next) => {
             return res.status(400).json({ success: false, errors});
         }
 
-        const otp = genarateOtp();
+        const otp = generateOtp();
 
         req.session.otp = otp;
         req.session.email = email;
@@ -228,7 +228,6 @@ const updateProfile = async (req, res) => {
         if (errors) {
             await cleanupProfileUpload(uploadedImagePublicId);
             return res.status(400).json({ success: false, errors });
-            console.log(errors);
         }
 
         delete updateData.phone;
@@ -237,7 +236,7 @@ const updateProfile = async (req, res) => {
         //  phone verification 
         if (phone && phone !== user.phone) {
 
-            const otp = genarateOtp();
+            const otp = generateOtp();
             
             // Store OTP and phone in session
             req.session.phoneOtp = otp;
@@ -246,17 +245,17 @@ const updateProfile = async (req, res) => {
             console.log('Generated OTP:', otp, 'for phone:', phone); 
             //mail
             const emailSent = await sendProfileUpdateOtp(user.username, user.email, otp);
-                await cleanupProfileUpload(uploadedImagePublicId);
             if (!emailSent) {
+                await cleanupProfileUpload(uploadedImagePublicId);
                 return res.status(500).json({
                     success: false,
                     message: 'Failed to send OTP. Please try again later.',
                 });
             }
 
+            await user.save();
             await deleteProfileImage(oldProfileImage);
             uploadedImagePublicId = null;
-            await user.save();
             return res.status(200).json({ 
                 success: true, 
                 message: 'OTP sent to email for phone verification',
@@ -264,16 +263,17 @@ const updateProfile = async (req, res) => {
             });
         }
 
+        await user.save();
         await deleteProfileImage(oldProfileImage);
         uploadedImagePublicId = null;
-        await user.save();
         return res.status(200).json({ success: true, message: 'Profile updated successfully' });
-        await cleanupProfileUpload(uploadedImagePublicId);
     } catch (error) {
+        await cleanupProfileUpload(uploadedImagePublicId);
         console.error('Profile update error:', error);
         return res.status(500).json({ success: false, message: 'Server error occurred' });
     }
 };
+
 async function cleanupProfileUpload(publicId) {
     if (!publicId) {
         return;
@@ -295,7 +295,6 @@ async function deleteProfileImage(profileImage) {
         console.error('Profile image cleanup failed:', error);
     }
 }
-
 
 const verifyPhoneOtp = async (req, res , next) => {
     try {

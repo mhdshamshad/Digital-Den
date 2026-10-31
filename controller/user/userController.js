@@ -1,10 +1,10 @@
 const User = require("../../model/userSchema");
 const bcrypt = require("bcrypt");
-const { validateUser, genarateOtp }  = require("../../utils/helper.js");
+const { validateUser, generateOtp }  = require("../../utils/helper.js");
 const Wallet = require("../../model/walletSchema.js");
 const {sendForgotOtp, sendSignupOtp} = require("../../utils/userEmails.js")
 
-const loadLoagin = async (req , res) =>{
+const loadLogin = async (req , res) =>{
     try {
         if(!req.session.user){
             return res.render("signin");
@@ -99,7 +99,7 @@ const signup = async(req,res,next) =>{
             }); 
         }
          //  otp 
-        const otp = genarateOtp();
+        const otp = generateOtp();
 
         // send verification email 
         const emailSent = await sendSignupOtp(username, email,otp);
@@ -138,7 +138,7 @@ const loadVerifyOtp = async (req,res)=> {
     }
     catch(err){
         console.log("an error fond in otp verification!! ")
-        res.status(500).send("erorr fond");
+        res.status(500).send("Error found");
     }
 }
 
@@ -155,7 +155,7 @@ const verifyOTP = async(req, res , next)=>{
         console.log("session stored OTP:",req.session.userOtp);
 
         if(req.session.otpExpires && Date.now() > req.session.otpExpires){
-            console.log("session :",req.session.otpExpires , "current date" ,Date.now() ,"is elible:", Date.now() > req.session.otpExpires );
+            console.log("session :",req.session.otpExpires , "current date" ,Date.now() ,"is legible:", Date.now() > req.session.otpExpires );
             return res.status(400).json({success:false,message:"OTP session expired. Please request a new OTP"})
         }
         if(otp !== req.session.userOtp ){
@@ -274,7 +274,7 @@ const resendOtp = async (req, res ,next)=>{
             });
         } 
 
-        let otp  = genarateOtp();
+        let otp  = generateOtp();
         req.session.userOtp = otp ;
         req.session.otpExpires = Date.now() + 60 *1000 ;
 
@@ -337,7 +337,7 @@ const forgotPassword = async (req , res ,next) => {
             }); 
         } 
         //  otp 
-        const otp = genarateOtp();
+        const otp = generateOtp();
         const emailSent = await sendForgotOtp(findUser, otp);
 
         if(!emailSent){
@@ -429,7 +429,7 @@ const resendResetOtp = async (req , res ,next) =>{
         }
 
         //  otp 
-        const otp = genarateOtp();
+        const otp = generateOtp();
         const emailSent = await sendForgotOtp(findUser, otp);
         if(! emailSent){
             return res.status(500).json({
@@ -525,7 +525,7 @@ const pageNotFound = async (req,res)=> {
 }
 
 module.exports = {
-    loadLoagin,
+    loadLogin,
     login,
     loadSignup,
     signup,

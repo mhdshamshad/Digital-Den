@@ -344,7 +344,7 @@ const editProduct = async (req, res) => {
       };
   
       // Validate 
-      const errors = await validateProduct(updateData);
+      const errors = await validateProduct(updateData, productId);
       if (Object.keys(errors).length > 0) {
         await cleanupFiles(req.files);
         return res.status(400).json({ success: false, errors });
@@ -364,6 +364,11 @@ const editProduct = async (req, res) => {
         { $set: updateData },
         { new: true, runValidators: true }
       );
+
+      if (!updatedProduct) {
+        await cleanupFiles(req.files);
+        return res.status(404).json({ success: false, message: 'Product not found' });
+      }
 
       updatedProduct.status = await determineStatus(updatedProduct._id);
       await updatedProduct.save();

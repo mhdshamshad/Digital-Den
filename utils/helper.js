@@ -103,7 +103,7 @@ function validateUser(req) {
 }
 
 //otp generating 
-function genarateOtp(){
+function generateOtp(){
   return  Math.floor(100000 + Math.random() * 900000).toString();
 } 
 
@@ -295,7 +295,7 @@ async function calculateBestOffer (product , quantity) {
 
 module.exports = {
     validateUser,
-    genarateOtp,
+    generateOtp,
     getSpecialOffer,
     calculateCartTotals,
     calculateBestOffer,

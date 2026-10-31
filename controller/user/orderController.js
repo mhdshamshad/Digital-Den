@@ -7,7 +7,7 @@ const Product = require("../../model/productSchema");
 const {validateCancelOrder } = require("../../utils/validation");
 const  { generateCustomId }= require("../../utils/helper"); 
 
-const getorderSuccessPage = async (req, res , next) => {
+const getOrderSuccessPage = async (req, res , next) => {
     const { userData } = res.locals;
     const { orderId } = req.session; 
     try {
@@ -412,7 +412,7 @@ const returnItem = async (req, res , next) => {
 }; 
 
 module.exports = {
-    getorderSuccessPage,
+    getOrderSuccessPage,
     getOrders,
     trackOrder,
     cancelOrder,

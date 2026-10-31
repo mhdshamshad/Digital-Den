@@ -14,7 +14,7 @@ const {adminAuth} = require("../middleware/auth.js");
 const upload = require("../middleware/upload.js")
 
 // loin
-router.get("/login",adminController.loadLoagin)
+router.get("/login",adminController.loadLogin)
 router.post("/login",adminController.login);
 router.get("/logout",adminController.logout);
 

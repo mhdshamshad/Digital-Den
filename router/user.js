@@ -15,7 +15,7 @@ const userUpload = require("../middleware/userUpload.js");
 
 
 // user router 
-router.get("/signin",userController.loadLoagin);
+router.get("/signin",userController.loadLogin);
 router.post("/signin",userController.login);
 router.get("/signup",userController.loadSignup );
 router.post("/signup",userController.signup);
@@ -31,7 +31,7 @@ router.post("/reset-otp",userController.forgotOtp);
 router.get("/reset-password",userController.loadResetPassword);
 router.patch("/reset-password",userController.ResetPassword);
               
-// constact us & aboutus 
+// contact us & about us
 router.get("/contactUs",profileController.getContactUsPage);               
 router.get("/aboutUs",profileController.getAboutUsPage);
      
@@ -83,13 +83,13 @@ router.post('/cart/apply-coupon', cartController.applyCoupon);
 router.get("/error-404",userController.pageNotFound);
   
 // checkout-section
-router.get("/checkout",cartController.getCheckoutpage);
+router.get("/checkout",cartController.getCheckoutPage);
 router.post("/checkout",cartController. proceedToCheckout);
 
 // order- section 
 router.post("/order/place",cartController.placeOrder);
 router.post('/order/create-razorpay-order', cartController.createRazorpayOrder);
-router.get("/order-success",orderController.getorderSuccessPage);
+router.get("/order-success",orderController.getOrderSuccessPage);
 router.get('/order-failure', cartController.getOrderFailurePage);
 router.post('/order/retry-payment', cartController.retryPayment);
 router.get("/orders",orderController.getOrders);
@@ -99,7 +99,7 @@ router.post('/order/return/:orderId', orderController.returnOrder);
 router.post('/order/return-item/:orderId/:itemId', orderController.returnItem);
  
 //address -section
-router.get("/address",addressController.loadAddresspage);
+router.get("/address",addressController.loadAddressPage);
 router.post("/address/add",addressController.addAddress);
 router.patch("/address/edit/:id", addressController.editAddress);
 router.delete("/address/delete/:id", addressController.deleteAddress);
@@ -114,7 +114,7 @@ router.post('/verify-email-otp', profileController.verifyEmailOtp);
 router.post('/update-profile',userUpload ,profileController.updateProfile); 
 router.post('/verify-phone-otp',userUpload ,profileController.verifyPhoneOtp);
 
-//walllet management 
+//wallet management
 router.get("/wallet",walletController.getWalletPage);
 router.post('/wallet/add',walletController.addAmountWallet);
 router.post('/wallet/verify-payment', walletController.verifyPayment);
@@ -125,4 +125,3 @@ router.post('/wallet/payment-failure', walletController.handlePaymentFailure);
 // error handler 
 router.use(userErrorHandler);
 module.exports = router;
-

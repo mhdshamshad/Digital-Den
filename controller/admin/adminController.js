@@ -1,7 +1,7 @@
 const User = require("../../model/userSchema");
 const bcrypt =  require("bcrypt")
 
-const loadLoagin = async (req , res) =>{
+const loadLogin = async (req , res) =>{
     try {
         if(req.session.adminId){
           return  res.redirect("/admin/dashboard")
@@ -73,7 +73,7 @@ const logout = async (req, res , next)=>{
 
 
 module.exports = {
-    loadLoagin,
+    loadLogin,
     login,
     logout, 
 }
