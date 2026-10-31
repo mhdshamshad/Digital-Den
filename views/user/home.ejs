@@ -62,7 +62,7 @@
                                         -<%= Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100) %>%
                                     </div>
                                 <% } %>
-                                <img src="/uploads/products/<%= product.cardImage %>" alt="<%= product.productName %>">
+                                <img src="<%= product.cardImage %>" alt="<%= product.productName %>">
                                 <button class="wishlist-btn <%= wishlist && wishlist.products.some(item => item.productId.toString() === product._id.toString()) ? 'always-visible' : '' %>" 
                                         data-product-id="<%= product._id %>" 
                                         onclick="toggleWishlist('<%= product._id %>', this, event)">
@@ -136,7 +136,7 @@
                                             -<%= Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100) %>%
                                         </div>
                                     <% } %>
-                                    <img src="/uploads/products/<%= product.cardImage %>" alt="<%= product.productName %>">
+                                    <img src="<%= product.cardImage %>" alt="<%= product.productName %>">
                                     <button class="wishlist-btn <%= wishlist && wishlist.products.some(item => item.productId.toString() === product._id.toString()) ? 'always-visible' : '' %>" 
                                             data-product-id="<%= product._id %>" 
                                             onclick="toggleWishlist('<%= product._id %>', this, event)">
@@ -190,7 +190,7 @@
                                             -<%= Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100) %>%
                                         </div>
                                     <% } %>
-                                    <img src="/uploads/products/<%= product.cardImage %>" class="product-img-last" alt="<%= product.productName %>">
+                                    <img src="<%= product.cardImage %>" class="product-img-last" alt="<%= product.productName %>">
                                     <button class="wishlist-btn <%= wishlist && wishlist.products.some(item => item.productId.toString() === product._id.toString()) ? 'always-visible' : '' %>" 
                                             data-product-id="<%= product._id %>" 
                                             onclick="toggleWishlist('<%= product._id %>', this, event)">
@@ -254,8 +254,6 @@
     updateCountdown(); // initial call
   </script>
   
-
-
 
 
 

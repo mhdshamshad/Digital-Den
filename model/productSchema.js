@@ -67,9 +67,16 @@ const productSchema = new Schema({
         type: String, 
         required: true 
     },
+    cardImagePublicId: {
+        type: String
+    },
     productImages: { 
         type: [String], 
         required: true 
+    },
+    productImagePublicIds: {
+        type: [String],
+        default: []
     },
     isListed: {
         type: Boolean,

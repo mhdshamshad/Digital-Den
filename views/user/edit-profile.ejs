@@ -79,7 +79,7 @@
                             <div class="col-12 col-md-3 text-center">
                                 <div class="d-flex flex-column align-items-center">
                                     <% if (user.profileImage ) { %>
-                                        <img src="/uploads/user/profileimages/<%= user.profileImage %>" alt="<%= user.username %>" class="profile-photo mb-3" id="profilePhotoPreview">
+                                        <img src="<%= user.profileImage %>" alt="<%= user.username %>" class="profile-photo mb-3" id="profilePhotoPreview">
                                     <% } else { %>
                                         <div class="default-profile-icon mb-3" id="profilePhotoPreview">
                                             <i class="bi bi-person-fill"></i>

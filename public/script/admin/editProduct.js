@@ -4,7 +4,23 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentImageIndex = null;
     const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
     const productId = document.getElementById('productId').value;
-    let removedExistingIndices = new Set(); // Track removed existing images
+    const productThumbnails = document.getElementById('productThumbnails');
+
+    document.getElementById('removeCardImageButton').addEventListener('click', () => {
+        removeImage('cardImageUpload');
+    });
+    productThumbnails.addEventListener('click', event => {
+        const wrapper = event.target.closest('.thumbnail-wrapper');
+        if (!wrapper) return;
+
+        if (event.target.closest('.remove-btn')) {
+            event.stopPropagation();
+            removeImage(wrapper);
+            return;
+        }
+
+        selectThumbnail(wrapper);
+    });
 
     // Form submission
     const productForm = document.getElementById('ProductForm');
@@ -60,14 +76,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     Swal.fire('Warning', 'Please select an image to crop', 'warning');
                     return;
                 }
-                currentImageIndex = parseInt(selected.getAttribute('data-index'));
                 const isExisting = selected.hasAttribute('data-existing');
                 if (isExisting) {
+                    currentImageIndex = Number(selected.getAttribute('data-index'));
                     fetch(selected.querySelector('img').src)
                         .then(res => res.blob())
                         .then(blob => openCropModal(new File([blob], `existing-${currentImageIndex}.jpg`, { type: 'image/jpeg' })));
                 } else {
-                    const file = files[currentImageIndex - document.querySelectorAll('[data-existing]:not(.removed)').length];
+                    currentImageIndex = Number(selected.getAttribute('data-file-index'));
+                    const file = files[currentImageIndex];
                     if (!file) {
                         Swal.fire('Warning', 'No file selected for cropping', 'warning');
                         return;
@@ -76,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else {
                 currentImageIndex = 0;
-                if (!files.length && document.getElementById('cardThumbnailContainer').style.display === 'block') {
+                if (!files.length && !document.getElementById('cardThumbnailContainer').classList.contains('d-none')) {
                     fetch(document.getElementById('cardThumbnail').src)
                         .then(res => res.blob())
                         .then(blob => openCropModal(new File([blob], 'existing-card.jpg', { type: 'image/jpeg' })));
@@ -173,17 +190,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const cardImageContainer = document.getElementById('cardThumbnailContainer');
         const cardImageInput = document.getElementById('cardImageUpload');
-        if (cardImageContainer.style.display === 'none' && !cardImageInput.files.length) {
+        if (cardImageContainer.classList.contains('d-none') && !cardImageInput.files.length) {
             showError('cardImageUpload', 'Card image is required');
             isValid = false;
         }
 
         const productImagesInput = document.getElementById('productImagesUpload');
-        const thumbnails = document.querySelectorAll('#productThumbnails .thumbnail-wrapper');
         const newImagesCount = productImagesInput.files.length;
-        const removedCount = removedExistingIndices.size;
         const existingImagesCount = document.querySelectorAll('#productThumbnails .thumbnail-wrapper[data-existing]').length;
-        const totalImages = (thumbnails.length - removedCount) + newImagesCount;
+        const totalImages = existingImagesCount + newImagesCount;
 
         if (totalImages < 3) {
             showError('productImagesUpload', 'Minimum 3 product images required');
@@ -321,7 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const reader = new FileReader();
                 reader.onload = e => {
                     thumbnail.src = e.target.result;
-                    container.style.display = 'block';
+                    container.classList.remove('d-none');
                     const removeCardInput = document.querySelector('input[name="removeCardImage"]');
                     if (removeCardInput) removeCardInput.remove();
                 };
@@ -335,7 +350,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleMultipleFileChange() {
         const fileInput = document.getElementById('productImagesUpload');
         const container = document.getElementById('productThumbnails');
-        const existingCount = container.querySelectorAll('.thumbnail-wrapper[data-existing]:not(.removed)').length;
 
         Array.from(fileInput.files).forEach((file, index) => {
             if (validateFile(file)) {
@@ -343,7 +357,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 reader.onload = e => {
                     const wrapper = document.createElement('div');
                     wrapper.className = 'thumbnail-wrapper';
-                    wrapper.setAttribute('data-index', existingCount + index);
+                    wrapper.setAttribute('data-index', `new-${index}`);
+                    wrapper.setAttribute('data-file-index', index);
 
                     const img = document.createElement('img');
                     img.className = 'thumbnail-img';
@@ -352,16 +367,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const removeBtn = document.createElement('button');
                     removeBtn.className = 'remove-btn';
                     removeBtn.innerHTML = '×';
-                    removeBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        removeImage(existingCount + index);
-                    };
 
                     wrapper.appendChild(img);
                     wrapper.appendChild(removeBtn);
-                    wrapper.onclick = e => {
-                        if (e.target !== removeBtn) selectThumbnail(wrapper);
-                    };
                     container.appendChild(wrapper);
                 };
                 reader.readAsDataURL(file);
@@ -390,7 +398,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const reader = new FileReader();
         reader.onload = e => {
             thumbnail.src = e.target.result;
-            container.style.display = 'block';
+            container.classList.remove('d-none');
             const removeCardInput = document.querySelector('input[name="removeCardImage"]');
             if (removeCardInput) removeCardInput.remove();
         };
@@ -399,7 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateMultipleFile(croppedFile) {
         const fileInput = document.getElementById(currentFileInput);
-        const wrapper = document.querySelector(`.thumbnail-wrapper[data-index="${currentImageIndex}"]`);
+        const wrapper = document.querySelector('.thumbnail-wrapper.thumbnail-selected');
         const img = wrapper.querySelector('img');
         const isExisting = wrapper.hasAttribute('data-existing');
 
@@ -412,8 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             const dt = new DataTransfer();
             const files = Array.from(fileInput.files);
-            const offset = document.querySelectorAll('[data-existing]:not(.removed)').length;
-            files[currentImageIndex - offset] = croppedFile;
+            files[currentImageIndex] = croppedFile;
             files.forEach(file => dt.items.add(file));
             fileInput.files = dt.files;
         }
@@ -433,40 +440,45 @@ document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById(indexOrId);
             const container = document.getElementById('cardThumbnailContainer');
             fileInput.value = '';
-            container.style.display = 'none';
+            container.classList.add('d-none');
             const removeCardInput = document.createElement('input');
             removeCardInput.type = 'hidden';
             removeCardInput.name = 'removeCardImage';
             removeCardInput.value = 'true';
+            const existingRemoveInput = productForm.querySelector('input[name="removeCardImage"]');
+            if (existingRemoveInput) existingRemoveInput.remove();
             productForm.appendChild(removeCardInput);
         } else {
             const fileInput = document.getElementById('productImagesUpload');
-            const container = document.getElementById('productThumbnails');
-            const wrapper = container.querySelector(`.thumbnail-wrapper[data-index="${indexOrId}"]`);
+            const wrapper = indexOrId;
+            if (!wrapper || !wrapper.matches('.thumbnail-wrapper')) return;
 
-            if (wrapper) {
-                const isExisting = wrapper.hasAttribute('data-existing');
-                wrapper.classList.add('removed'); // Mark as removed for UI
-                if (isExisting) {
-                    removedExistingIndices.add(parseInt(indexOrId));
-                    const removeInput = document.createElement('input');
-                    removeInput.type = 'hidden';
-                    removeInput.name = `removedImages[${indexOrId}]`;
-                    removeInput.value = 'true';
-                    productForm.appendChild(removeInput);
-                } else {
-                    const dt = new DataTransfer();
-                    const existingCount = container.querySelectorAll('[data-existing]:not(.removed)').length;
-                    Array.from(fileInput.files).forEach((file, i) => {
-                        if (i !== (indexOrId - existingCount)) dt.items.add(file);
-                    });
-                    fileInput.files = dt.files;
-                }
+            if (wrapper.hasAttribute('data-existing')) {
+                const existingIndex = Number(wrapper.getAttribute('data-index'));
+                const removeInput = document.createElement('input');
+                removeInput.type = 'hidden';
+                removeInput.name = `removedImages[${existingIndex}]`;
+                removeInput.value = 'true';
+                productForm.appendChild(removeInput);
+            } else {
+                const removedFileIndex = Number(wrapper.getAttribute('data-file-index'));
+                const files = Array.from(fileInput.files);
+                const dataTransfer = new DataTransfer();
+                files.forEach((file, index) => {
+                    if (index !== removedFileIndex) dataTransfer.items.add(file);
+                });
+                fileInput.files = dataTransfer.files;
                 wrapper.remove();
 
-                // Reindex thumbnails
-                Array.from(container.children).forEach((child, i) => child.setAttribute('data-index', i));
+                productThumbnails.querySelectorAll('.thumbnail-wrapper:not([data-existing])')
+                    .forEach((newWrapper, index) => {
+                        newWrapper.setAttribute('data-file-index', index);
+                        newWrapper.setAttribute('data-index', `new-${index}`);
+                    });
+                return;
             }
+
+            wrapper.remove();
         }
     }
 

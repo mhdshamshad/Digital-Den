@@ -507,8 +507,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     const userInitials = review.user?.username ? review.user.username.substring(0, 1).toUpperCase() : 'U';
    
                     // Profile 
-                    const profileImage = review.user?.profileImage 
-                        ? `<img src="/uploads/user/profileimages/${review.user.profileImage}" style="width: 100%; height: 100%; object-fit: cover;" class="rounded-circle" />`
+                    const profileImageUrl = review.user?.profileImage || '';
+                    const profileImage = profileImageUrl
+                        ? `<img src="${profileImageUrl}" style="width: 100%; height: 100%; object-fit: cover;" class="rounded-circle" />`
                         : userInitials;
                     
                     const isLiked = review.votedUsers.findIndex(id => id === currentUserId );
@@ -727,4 +728,3 @@ document.addEventListener('DOMContentLoaded', function() {
 
         
 });
-

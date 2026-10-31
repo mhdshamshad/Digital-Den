@@ -5,8 +5,7 @@ const {genarateOtp} = require("../../utils/helper");
 const Wallet = require("../../model/walletSchema");
 const {sendProfileUpdateOtp} = require("../../utils/userEmails");
 const Product = require('../../model/productSchema');
-const fs = require('fs');
-const path = require('path');
+const { deleteCloudinaryImage } = require('../../config/cloudinary');
 
 
 const getUserProfile = async (req, res) => {
@@ -195,9 +194,13 @@ const verifyEmailOtp = async (req , res , next) => {
 }
 
 const updateProfile = async (req, res) => {
+    let uploadedImagePublicId;
     try {
         const user = await User.findById(res.locals.userData._id); 
         if (!user) {
+            if (req.file?.publicId) {
+                await deleteCloudinaryImage(req.file.publicId);
+            }
             return res.status(403).json({ success: false, message: 'User not found' });
         }
         const { firstName, lastName, username, phone, removePhoto } = req.body;
@@ -209,27 +212,21 @@ const updateProfile = async (req, res) => {
             phone
         };
       
-        // profile image
+        let oldProfileImage;
         if (req.file) {
-            if (user.profileImage) {
-                const oldImagePath = path.join(__dirname, '../public/uploads/user/profileimages', user.profileImage);
-                if (fs.existsSync(oldImagePath)) {
-                    fs.unlinkSync(oldImagePath);
-                }
-            }
-            updateData.profileImage = req.file.filename;
+            uploadedImagePublicId = req.file.publicId;
+            oldProfileImage = user.profileImagePublicId;
+            updateData.profileImage = req.file.path;
+            updateData.profileImagePublicId = req.file.publicId;
         } else if (removePhoto === 'true') {
-            if (user.profileImage) {
-                const oldImagePath = path.join(__dirname, '../public/uploads/user/profileimages', user.profileImage);
-                if (fs.existsSync(oldImagePath)) {
-                    fs.unlinkSync(oldImagePath);
-                }
-            }
+            oldProfileImage = user.profileImagePublicId;
             updateData.profileImage = null;
+            updateData.profileImagePublicId = null;
         }
   
         const errors = await validateUserProfile(updateData); 
         if (errors) {
+            await cleanupProfileUpload(uploadedImagePublicId);
             return res.status(400).json({ success: false, errors });
             console.log(errors);
         }
@@ -249,6 +246,7 @@ const updateProfile = async (req, res) => {
             console.log('Generated OTP:', otp, 'for phone:', phone); 
             //mail
             const emailSent = await sendProfileUpdateOtp(user.username, user.email, otp);
+                await cleanupProfileUpload(uploadedImagePublicId);
             if (!emailSent) {
                 return res.status(500).json({
                     success: false,
@@ -256,6 +254,8 @@ const updateProfile = async (req, res) => {
                 });
             }
 
+            await deleteProfileImage(oldProfileImage);
+            uploadedImagePublicId = null;
             await user.save();
             return res.status(200).json({ 
                 success: true, 
@@ -264,13 +264,38 @@ const updateProfile = async (req, res) => {
             });
         }
 
+        await deleteProfileImage(oldProfileImage);
+        uploadedImagePublicId = null;
         await user.save();
         return res.status(200).json({ success: true, message: 'Profile updated successfully' });
+        await cleanupProfileUpload(uploadedImagePublicId);
     } catch (error) {
         console.error('Profile update error:', error);
         return res.status(500).json({ success: false, message: 'Server error occurred' });
     }
 };
+async function cleanupProfileUpload(publicId) {
+    if (!publicId) {
+        return;
+    }
+    try {
+        await deleteCloudinaryImage(publicId);
+    } catch (error) {
+        console.error('Cloudinary profile image cleanup failed:', error);
+    }
+}
+
+async function deleteProfileImage(profileImage) {
+    if (!profileImage) {
+        return;
+    }
+    try {
+        await deleteCloudinaryImage(profileImage);
+    } catch (error) {
+        console.error('Profile image cleanup failed:', error);
+    }
+}
+
 
 const verifyPhoneOtp = async (req, res , next) => {
     try {

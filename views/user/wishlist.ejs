@@ -140,7 +140,7 @@
                             <div class="wishlist-item p-3 mb-3 border  <%= item.status === "Available"  ? ''  :'updating' %> "  data-product-id="<%= item.id %>">
                                 <div class="row align-items-center">
                                     <div class="col-md-2 mb-2 mb-md-0">
-                                        <img src="/uploads/products/<%= item.cardImage %>" alt="<%= item.name %>" class="product-img">
+                                        <img src="<%= item.cardImage %>" alt="<%= item.name %>" class="product-img">
                                     </div>
                                     <div class="col-md-4 mb-2 mb-md-0">
                                         <h5 class="mb-1"><a href="/product/<%= item.id %>" class="text-decoration-none text-reset"><%= item.name %></a></h5>

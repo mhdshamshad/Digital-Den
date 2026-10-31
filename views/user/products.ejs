@@ -87,7 +87,7 @@
                                                     -<%= Math.round(((product.salePrice - product.salePrice) / product.salePrice) * 100) %>%
                                                 </div>
                                             <% } %>
-                                            <img src="/uploads/products/<%= product.cardImage %>" alt="<%= product.productName %>">
+                                            <img src="<%= product.cardImage %>" alt="<%= product.productName %>">
                                             <!-- Add Wishlist Button -->
                                             <button class="wishlist-btn <%= wishlist && wishlist.products.some(item => item.productId.toString() === product._id.toString()) ? 'always-visible' : '' %>" 
                                                     data-product-id="<%= product._id %>" 

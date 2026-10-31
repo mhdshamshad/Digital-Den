@@ -13,7 +13,7 @@
                         <div class="col-12 col-md-3 text-center">
                             <div class="d-flex flex-column align-items-center">
                                 <% if (user.profileImage) { %>
-                                    <img src="/uploads/user/profileImages/<%= user.profileImage %>" alt="Profile" class="profile-photo mb-3" data-bs-toggle="modal" data-bs-target="#profileImageModal">
+                                    <img src="<%= user.profileImage %>" alt="Profile" class="profile-photo mb-3" data-bs-toggle="modal" data-bs-target="#profileImageModal">
                                 <% } else { %>
                                     <div class="default-profile-icon mb-3">
                                         <i class="bi bi-person-fill"></i>
@@ -108,7 +108,7 @@
             </button>   
             <!-- Profile image -->
             <div class="profile-img-container">
-                <img src="/uploads/user/profileImages/<%= user.profileImage %>" alt="<%= user.username %>" id="modalProfileImg">
+                <img src="<%= user.profileImage %>" alt="<%= user.username %>" id="modalProfileImg">
             </div>
             <!-- Username -->
             <div class="profile-name">

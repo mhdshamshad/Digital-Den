@@ -399,7 +399,7 @@
                         <div class="order-items">
                             ${order.orderedItems.map(item => `
                                 <div class="item-row">
-                                    <img src="/uploads/products/${item.product.cardImage}" alt="Product" class="item-image">
+                                    <img src="${item.product.cardImage}" alt="Product" class="item-image">
                                     <div class="item-details">
                                         <div class="item-name">${item.product.productName}</div>
                                         <div class="item-price">Qty: ${item.quantity} × ₹${item.price} = ₹${item.quantity * item.price}</div>
