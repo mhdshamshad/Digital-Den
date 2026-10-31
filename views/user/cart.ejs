@@ -17,7 +17,7 @@
                         <div class="cart-item p-3 mb-3 border <%= isOutOfStock ? 'updating' : '' %>" data-product-id="<%= item.product.id %>">
                             <div class="row align-items-center">
                                 <div class="col-md-2 mb-2 mb-md-0">
-                                    <img src="/uploads/products/<%= item.product.cardImage %>" alt="<%= item.product.name %>" class="product-img">
+                                    <img src="<%= item.product.cardImage %>" alt="<%= item.product.name %>" class="product-img">
                                 </div>
                                 <div class="col-md-4 mb-2 mb-md-0">
                                     <h5 class="mb-1"><%= item.product.name %></h5>

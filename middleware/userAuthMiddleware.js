@@ -39,8 +39,6 @@ const checkBlockedStatus = async (req, res, next) => {
       if (user.googleId) {
           res.locals.googleIdUser = user.googleId;
       }
-
-      console.log("user blocked status:", user.isBlocked);
       next();
       
     } catch (error) {

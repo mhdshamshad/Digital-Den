@@ -130,7 +130,7 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="position-relative rounded-4 overflow-hidden shadow-sm ratio ratio-4x3">
-                            <img src="/uploads/products/<%= product.cardImage %>" alt="Main Product Image" class="img-cover position-absolute">
+                            <img src="<%= product.cardImage %>" alt="Main Product Image" class="img-cover position-absolute">
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -138,7 +138,7 @@
                             <% product.productImages.forEach((img, index) => { %>
                                 <div class="col-6">
                                     <div class="position-relative rounded-4 overflow-hidden shadow-sm ratio ratio-1x1">
-                                        <img src="/uploads/products/<%= img %>" alt="Product Image <%= index + 1 %>" class="img-cover position-absolute">
+                                        <img src="<%= img %>" alt="Product Image <%= index + 1 %>" class="img-cover position-absolute">
                                     </div>
                                 </div>
                             <% }) %>

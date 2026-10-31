@@ -153,9 +153,9 @@
                                         <input type="file" name="cardImage" id="cardImageUpload" accept="image/jpeg,image/png,image/gif,image/webp" class="form-control">
                                         <div class="invalid-feedback"></div>
                                     </div>
-                                    <div id="cardThumbnailContainer" class="thumbnail-container" style="display: <%= product.cardImage ? 'block' : 'none' %>">
-                                        <img id="cardThumbnail" class="thumbnail-img" src="<%= product.cardImage ? '/uploads/products/' + product.cardImage : '' %>" alt="Card Image Preview">
-                                        <button type="button" class="remove-btn" onclick="removeImage('cardImageUpload', 'cardThumbnailContainer')">×</button>
+                                    <div id="cardThumbnailContainer" class="thumbnail-container <%= product.cardImage ? '' : 'd-none' %>">
+                                        <img id="cardThumbnail" class="thumbnail-img" src="<%= product.cardImage %>" alt="Card Image Preview">
+                                        <button type="button" class="remove-btn" id="removeCardImageButton">×</button>
                                     </div>
                                     <button type="button" class="btn btn-outline-primary mt-2 crop-btn" data-target="cardImageUpload">
                                         <i class="fas fa-crop-alt me-1"></i> Crop Image
@@ -182,8 +182,8 @@
                                     <div id="productThumbnails" class="thumbnails-container">
                                         <% product.productImages.forEach((image, index) => { %>
                                             <div class="thumbnail-wrapper" data-index="<%= index %>" data-existing="true">
-                                                <img class="thumbnail-img" src="/uploads/products/<%= image %>" alt="Product Image">
-                                                <button type="button" class="remove-btn" onclick="removeImage('<%= index %>')">×</button>
+                                                <img class="thumbnail-img" src="<%= image %>" alt="Product Image">
+                                                <button type="button" class="remove-btn">×</button>
                                             </div>
                                         <% }); %>
                                     </div>

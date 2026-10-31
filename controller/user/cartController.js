@@ -388,10 +388,6 @@ const getCartPage = async (req, res) => {
             $or: [{ usersUsed: { $ne: userData._id } }, { usersUsed: { $exists: false } }],
         });
 
-        cart.items.forEach(item => {
-            
-        })
-
         if (!cart) return res.render('cart', { cart: defaultCart, coupons });
 
         cart = await checkCartItemStatus(cart);  
@@ -843,7 +839,7 @@ const  proceedToCheckout = async (req , res , next) => {
 
 }
  
-const getCheckoutpage = async (req, res ,next) => {
+const getCheckoutPage = async (req, res ,next) => {
     const {userData, isLoggedIn,isUserBlocked} = res.locals;
     if (!isLoggedIn || isUserBlocked) {
         return res.status(401).redirect("/");
@@ -1221,7 +1217,7 @@ module.exports = {
     retryPayment,
     getOrderFailurePage,
     proceedToCheckout, 
-    getCheckoutpage,
+    getCheckoutPage,
     placeOrder,
     createRazorpayOrder,
     getWishlistPage,

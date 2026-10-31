@@ -18,7 +18,7 @@
         <div class="col-lg-6 mb-4 mb-lg-0">
             <div class="product-image-container mb-3">
                 <div class="zoom-container">
-                    <img src="/uploads/products/<%= product.cardImage %>" id="mainImage" 
+                    <img src="<%= product.cardImage %>" id="mainImage"
                          class="img-fluid" alt="<%= product.productName %>">
                     <div class="zoom-lens"></div>
                     <div class="zoom-instructions position-absolute bottom-0 end-0 p-2 bg-black bg-opacity-50 text-white rounded-start">
@@ -34,7 +34,7 @@
             <div class="row thumbnail-gallery g-2">
                 <% product.productImages.forEach((img, index) => { %>
                     <div class="col-3">
-                        <img src="/uploads/products/<%= img %>" 
+                        <img src="<%= img %>"
                              class="img-fluid thumbnail <%= index === 0 ? 'active' : '' %>" 
                              alt="Thumbnail <%= index + 1 %>" 
                             onclick="changeMainImage(this)">
@@ -447,7 +447,7 @@
                     <a href="/product/<%= related._id %>" class="product-link">
                         <div class="product-card">
                             <div class="image-container">
-                                <img src="/uploads/products/<%= related.cardImage %>" alt="Product Image">
+                                <img src="<%= related.cardImage %>" alt="Product Image">
                             </div>
                             <h4><%= related.category.name %></h4>
                             <h3><%= related.productName %></h3>

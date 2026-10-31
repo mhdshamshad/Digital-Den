@@ -14,7 +14,19 @@ function togglePassword(inputId, iconId) {
 const urlParams = new URLSearchParams(window.location.search);
 
 const referralCode = urlParams.get('ref');
-console.log("refferralcode :",referralCode);
+
+const googleSignupLink = document.getElementById('googleSignupLink');
+if (googleSignupLink && referralCode) {
+    googleSignupLink.href = `/auth/google?ref=${encodeURIComponent(referralCode)}`;
+}
+
+if (urlParams.get('referralError') === 'invalid') {
+    Swal.fire({
+        icon: 'error',
+        title: 'Invalid referral link',
+        text: 'This referral code is no longer valid.'
+    });
+}
 
 if (referralCode) {
     const signupForm = document.getElementById('signupForm');

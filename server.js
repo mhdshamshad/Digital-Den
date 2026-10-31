@@ -10,6 +10,11 @@ const nocache = require("nocache");
 const path = require("path");
 
 const app = express();
+const sessionMaxAgeHours = Number(process.env.SESSION_MAX_AGE_HOURS || 72);
+
+if (!Number.isFinite(sessionMaxAgeHours) || sessionMaxAgeHours <= 0) {
+  throw new Error("SESSION_MAX_AGE_HOURS must be a positive number");
+}
 
 
 app.use(express.static('public', {
@@ -24,14 +29,15 @@ app.use(express.static('public', {
   
 
 app.use(session({
-    secret: "your_secret_key",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: { 
-        httpOnly:true,
-        secure:false,
-        maxAge:72*60*60*1000
-     } 
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: sessionMaxAgeHours * 60 * 60 * 1000
+    }
 }));
 
 

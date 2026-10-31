@@ -3,8 +3,7 @@ const Category = require('../../model/categorySchema');
 const Brand = require('../../model/brandSchema');
 const  {determineStatus} = require("../../utils/helper")
 const { validateProduct } = require('../../utils/validation');
-const fs = require('fs').promises;
-const path = require('path');
+const { deleteCloudinaryImage } = require('../../config/cloudinary');
 
 const productInfo = async (req, res , next) => {
     try {
@@ -194,8 +193,10 @@ const addProduct = async (req, res) => {
       }
   
       // Handle uploaded files
-      const cardImage = req.files?.['cardImage']?.[0]?.filename;
-      const productImages = req.files?.['productImages']?.map((file) => file.filename) || [];
+      const cardImageFile = req.files?.['cardImage']?.[0];
+      const productImageFiles = req.files?.['productImages'] || [];
+      const cardImage = cardImageFile?.path;
+      const productImages = productImageFiles.map((file) => file.path);
   
       let parsedQuantity = parseInt(quantity || 0)
       const isListed = true;
@@ -213,7 +214,9 @@ const addProduct = async (req, res) => {
         quantity: parsedQuantity,
         specifications: parsedSpecifications,
         cardImage,
+        cardImagePublicId: cardImageFile?.publicId,
         productImages,
+        productImagePublicIds: productImageFiles.map((file) => file.publicId),
       };
      
       // Validate
@@ -277,35 +280,48 @@ const editProduct = async (req, res) => {
   
       // Prepare image updates
       let cardImage = existingProduct.cardImage;
+      let cardImagePublicId = existingProduct.cardImagePublicId;
       let productImages = [...existingProduct.productImages]; // Start with existing images
-      const uploadDir = path.join(__dirname, '../public/uploads/products');
-      const deletedFiles = [];
+      let productImagePublicIds = [...(existingProduct.productImagePublicIds || [])];
+      while (productImagePublicIds.length < productImages.length) {
+        productImagePublicIds.push('');
+      }
+      const deletedImages = [];
   
       // Handle card image updates
       if (req.files?.['cardImage']) {
-        cardImage = req.files['cardImage'][0].filename;
+        const newCardImage = req.files['cardImage'][0];
+        cardImage = newCardImage.path;
+        cardImagePublicId = newCardImage.publicId;
         if (existingProduct.cardImage) {
-          deletedFiles.push(path.join(uploadDir, existingProduct.cardImage));
+          deletedImages.push(existingProduct.cardImagePublicId);
         }
       } else if (removeCardImage === 'true') {
         if (existingProduct.cardImage) {
-          deletedFiles.push(path.join(uploadDir, existingProduct.cardImage));
+          deletedImages.push(existingProduct.cardImagePublicId);
         }
         cardImage = '';
+        cardImagePublicId = null;
       }
   
       // Handle product images updates
       if (req.files?.['productImages']) {
-        // Append new images 
-        const newImages = req.files['productImages'].map((file) => file.filename);
+        const newImages = req.files['productImages'].map((file) => file.path);
+        const newImagePublicIds = req.files['productImages'].map((file) => file.publicId);
         productImages = [...productImages, ...newImages];
+        productImagePublicIds = [...productImagePublicIds, ...newImagePublicIds];
       }
   
       if (removedImages) {
         const removedIndices = Object.keys(removedImages).map((index) => parseInt(index));
-        const imagesToDelete = existingProduct.productImages.filter((_, index) => removedIndices.includes(index));
-        deletedFiles.push(...imagesToDelete.map((image) => path.join(uploadDir, image)));
+        const removedIndexSet = new Set(removedIndices);
+        existingProduct.productImages.forEach((image, index) => {
+          if (removedIndexSet.has(index)) {
+            deletedImages.push(existingProduct.productImagePublicIds?.[index]);
+          }
+        });
         productImages = productImages.filter((_, index) => !removedIndices.includes(index));
+        productImagePublicIds = productImagePublicIds.filter((_, index) => !removedIndices.includes(index));
       }
       let parsedQuantity = parseInt(quantity || 0)
       const isListed = true;
@@ -322,11 +338,13 @@ const editProduct = async (req, res) => {
         isListed,
         specifications: parsedSpecifications,
         cardImage,
+        cardImagePublicId,
         productImages,
+        productImagePublicIds,
       };
   
       // Validate 
-      const errors = await validateProduct(updateData);
+      const errors = await validateProduct(updateData, productId);
       if (Object.keys(errors).length > 0) {
         await cleanupFiles(req.files);
         return res.status(400).json({ success: false, errors });
@@ -347,15 +365,15 @@ const editProduct = async (req, res) => {
         { new: true, runValidators: true }
       );
 
+      if (!updatedProduct) {
+        await cleanupFiles(req.files);
+        return res.status(404).json({ success: false, message: 'Product not found' });
+      }
+
       updatedProduct.status = await determineStatus(updatedProduct._id);
       await updatedProduct.save();
   
-      // Delete old files 
-      await Promise.all(
-        deletedFiles.map((filePath) =>
-          fs.unlink(filePath).catch((err) => console.log('File deletion failed:', err))
-        )
-      );
+      await deleteStoredImages(deletedImages);
       
       res.setHeader('Cache-Control', 'no-store');
       return res.status(200).json({success: true,
@@ -371,12 +389,25 @@ const editProduct = async (req, res) => {
 // Helper function to clean
 async function cleanupFiles(files) {
   if (!files) return;
-  const uploadDir = path.join(__dirname, '../public/uploads/products');
-  const filePaths = [
-    ...(files['cardImage'] || []).map((file) => path.join(uploadDir, file.filename)),
-    ...(files['productImages'] || []).map((file) => path.join(uploadDir, file.filename)),
+  const uploadedImages = [
+    ...(files['cardImage'] || []),
+    ...(files['productImages'] || [])
   ];
-  await Promise.all(filePaths.map((filePath) => fs.unlink(filePath).catch(() => {})));
+  const results = await Promise.allSettled(
+    uploadedImages.map((file) => deleteCloudinaryImage(file.publicId))
+  );
+  results.filter((result) => result.status === 'rejected').forEach((result) => {
+    console.error('Cloudinary upload cleanup failed:', result.reason);
+  });
+}
+
+async function deleteStoredImages(images) {
+  const results = await Promise.allSettled(
+    images.filter(Boolean).map((publicId) => deleteCloudinaryImage(publicId))
+  );
+  results.filter((result) => result.status === 'rejected').forEach((result) => {
+    console.error('Product image cleanup failed:', result.reason);
+  });
 }
 
 const getAddProductPage = async (req, res , next) => {

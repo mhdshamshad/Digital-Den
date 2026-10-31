@@ -210,22 +210,11 @@ if (shareWhatsApp) {
 }
 
 const getFullReferralLink = () => {
-    const referralCode = document.getElementById('referralLink').value;
-    return `https://digitaldeninda.shop/signup?ref=${referralCode}`;
+    const referralInput = document.getElementById('referralLink');
+    const referralUrl = new URL('/signup', referralInput.dataset.baseUrl);
+    referralUrl.searchParams.set('ref', referralInput.value.trim());
+    return referralUrl.toString();
 };
-
-
-copyButton?.addEventListener('click', function() {
-    // Copy the full URL including the website domain
-    navigator.clipboard.writeText(getFullReferralLink())
-    .then(() => {
-        const originalText = copyButton.innerHTML;
-        copyButton.innerHTML = '<i class="bi bi-check-lg me-1"></i> Copied!';
-        setTimeout(() => copyButton.innerHTML = originalText, 2000);
-    })
-    .catch(err => console.error('Failed to copy: ', err));
-});
-
 
 function displayFormErrors(form, errors) { 
     clearErrors(form);
@@ -252,5 +241,4 @@ function clearErrors(form) {
         el.style.display = 'none'; 
     });
 }
-
 

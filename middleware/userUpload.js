@@ -1,15 +1,5 @@
 const multer = require('multer');
-const path = require('path');
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../public/uploads/user/profileImages'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}-${file.originalname}`);
-  },
-});
+const CloudinaryStorage = require('./cloudinaryStorage');
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -21,7 +11,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 const userUpload = multer({
-  storage,
+  storage: new CloudinaryStorage('digital-den/profileImages'),
   fileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, 
 }).single('profileImage'); 

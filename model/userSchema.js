@@ -49,6 +49,10 @@ const userSchema = new Schema({
          type: String,
          required: false
     },    
+    profileImagePublicId: {
+        type: String,
+        required: false
+    },
     orderHistory:[{
         type:Schema.Types.ObjectId,
         ref:"Order",
@@ -84,7 +88,6 @@ userSchema.pre('save', function(next) {
 });
 
 module.exports = mongoose.model("User",userSchema);
-
 
 
 

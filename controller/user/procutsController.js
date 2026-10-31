@@ -13,7 +13,6 @@ const { validateReviewForm } = require("../../utils/validation");
 
 const loadHome = async (req , res) => {
     try {
-
         const { isLoggedIn, userData, isUserBlocked } = res.locals;
     
         let products  = await Product.find({
@@ -81,8 +80,8 @@ const loadHome = async (req , res) => {
           endDate: offer?.endDate?.toISOString() 
         }); 
     } catch (error) {
-        console.log("Home page not loading:", error);
-        res.status(500).send("Server Error");
+        console.error("Home page not loading:", error);
+        res.status(500).render("errorPage");
     }
 };
 
@@ -493,48 +492,36 @@ function calculateRatingPercentages(ratingsSummary) {
       
 // Helper function 
 const updateProductRatingSummary = async (productId) => {
-    try {
+    const reviews = await Review.find({ productId });
 
-        const reviews = await Review.find({ 
-            productId
-        });
-        
-        // reset ratings if no reviews
-        if (reviews.length === 0) {
-            await Product.findByIdAndUpdate(productId, {
-                ratingsSummary: {
-                    averageRating: 0,
-                    totalReviews: 0,
-                    ratingCounts: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
-                }
-            });
-            return;
-        };
-
-        const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-        let ratingSum = 0;
-        
-        reviews.forEach(review => {
-            ratingCounts[review.rating]++;
-            ratingSum += review.rating;
-        });
-        
-        const averageRating = ratingSum / reviews.length;
-        
-        // Update product with new rating summary
+    if (reviews.length === 0) {
         await Product.findByIdAndUpdate(productId, {
             ratingsSummary: {
-                averageRating: parseFloat(averageRating.toFixed(1)),
-                totalReviews: reviews.length,
-                ratingCounts
-            },   
-            
-
+                averageRating: 0,
+                totalReviews: 0,
+                ratingCounts: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+            }
         });
-
-    } catch (error) {
-        console.error('Error updating product rating:', error);
+        return;
     }
+
+    const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    let ratingSum = 0;
+
+    reviews.forEach(review => {
+        ratingCounts[review.rating]++;
+        ratingSum += review.rating;
+    });
+
+    const averageRating = ratingSum / reviews.length;
+
+    await Product.findByIdAndUpdate(productId, {
+        ratingsSummary: {
+            averageRating: parseFloat(averageRating.toFixed(1)),
+            totalReviews: reviews.length,
+            ratingCounts
+        }
+    });
 };
 
 const hasUserPurchasedProductForReview = async (userId, productId) => {
@@ -567,7 +554,7 @@ const addReview = async (req, res) => {
 
         const errors = validateReviewForm(req.body);
         if (errors) {
-            console.log(errors)
+            console.error(errors)
             return res.status(400).json({ success: false, errors });
         };
         
@@ -593,10 +580,6 @@ const addReview = async (req, res) => {
         });
         
         await newReview.save();
-
-        console.log("review saved :",newReview)
-        
-        // // Update product rating summary
         await updateProductRatingSummary(productId);
         
         return res.status(201).json({
@@ -637,7 +620,8 @@ const deleteProductReview = async (req , res) => {
         
          return res.status(200).json({ success: true , message: 'Review deleted successfully'});    
     } catch (error) {
-        
+        console.error('Error deleting review:', error);
+        return res.status(500).json({ success: false, message: 'Error deleting review' });
     }
 };
 
@@ -685,7 +669,7 @@ const editReview = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error creating review:', error);
+        console.error('Error editing review:', error);
         return res.status(500).json({ message: 'Error submitting review' });
     }
 };

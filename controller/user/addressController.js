@@ -3,7 +3,7 @@ const {State} = require("country-state-city");
 const Address = require("../../model/addressModel");
 const {validateAddress} = require("../../utils/validation");
 
-const loadAddresspage = async (req, res , next) => {
+const loadAddressPage = async (req, res , next) => {
     try {
 
       // Fetch the user
@@ -102,7 +102,6 @@ const editAddress = async (req, res) => {
 
         const addressIndex = addressDoc.addresses.findIndex(addr => addr._id.toString() === addressId);
         if (addressIndex === -1) {
-            console.log('Address not found in document:', addressId);
             return res.status(404).json({ success: false, message: 'Address not found' });
         }
 
@@ -158,7 +157,6 @@ const deleteAddress = async (req , res) =>{
 
         const addressIndex = addressDoc.addresses.findIndex(addr => addr._id.toString() === addressId);
         if (addressIndex === -1) {
-            console.log('Address not found in document:', addressId);
             return res.status(404).json({ success: false, message: 'Address not found' });
         }
 
@@ -179,7 +177,7 @@ const deleteAddress = async (req , res) =>{
 }
 
 module.exports = {
-    loadAddresspage,
+    loadAddressPage,
     addAddress,
     editAddress,
     deleteAddress,
